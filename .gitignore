@@ -1,0 +1,5 @@
+venv
+kandinsky.src
+
+**/__pycache__/
+.idea/
