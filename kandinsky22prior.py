@@ -13,6 +13,8 @@ from diffusers.pipelines.kandinsky import KandinskyPriorPipelineOutput
 from diffusers.utils import numpy_to_pil
 from diffusers.utils.torch_utils import randn_tensor
 
+from .utils import get_vanilla_callback
+
 logger = logging.getLogger()
 
 def _encode_prompt(
@@ -204,8 +206,7 @@ def text_prior_inference(
             ).prev_sample
 
             if callback_on_step_end is not None:
-                # TODO: update progress
-                pass
+                callback_on_step_end(i, num_inference_steps)
 
         latents = prior.post_process_latents(latents)
 
@@ -236,7 +237,7 @@ def encode_text(encoder, num_inference_steps, guidance_scale, seed, prompt, nega
         num_inference_steps=num_inference_steps,
         generator=generator,
         guidance_scale=guidance_scale,
-        callback_on_step_end=None, # TODO: update
+        callback_on_step_end=get_vanilla_callback(num_inference_steps),
     )
     text_encoder.to(offload_device)
     prior.to(offload_device)
@@ -251,16 +252,13 @@ def encode_image(encoder, image):
     image_processor, image_encoder = encoder
     image_encoder.to(device)
 
-    print(type(image))
     image = numpy_to_pil(image.numpy())[0]
-    print(image)
-    if isinstance(image, PIL.Image.Image):
-        image = (
-            image_processor(image, return_tensors="pt")
-            .pixel_values[0]
-            .unsqueeze(0)
-            .to(dtype=image_encoder.dtype, device=device)
-        )
+    image = (
+        image_processor(image, return_tensors="pt")
+        .pixel_values[0]
+        .unsqueeze(0)
+        .to(dtype=image_encoder.dtype, device=device)
+    )
     image_emb = image_encoder(image)["image_embeds"]
     # TODO: offload effectively
     image_encoder.to(offload_device)

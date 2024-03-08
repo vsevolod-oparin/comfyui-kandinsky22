@@ -12,6 +12,8 @@ from diffusers.pipelines.kandinsky2_2.pipeline_kandinsky2_2 import downscale_hei
 from diffusers.utils import numpy_to_pil
 from diffusers.utils.torch_utils import randn_tensor
 
+from .utils import get_vanilla_callback
+
 logger = logging.getLogger()
 
 
@@ -91,8 +93,7 @@ def decode(
         )[0]
 
         if callback_on_step_end is not None:
-            # TODO: pass callback
-            pass
+            callback_on_step_end(i, num_inference_steps)
 
     return latents
 
@@ -122,7 +123,7 @@ def unet_decode(
         num_inference_steps,
         guidance_scale,
         generator,
-        callback_on_step_end=None
+        callback_on_step_end=get_vanilla_callback(num_inference_steps)
     )
 
     # TODO: offload effectively
