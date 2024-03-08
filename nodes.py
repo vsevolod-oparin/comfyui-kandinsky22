@@ -4,8 +4,8 @@ from typing import List
 
 import torch
 
-from .kandinsky22decoder import load_decoder_kandinsky22, prepare_latents, movq_decode, unet_decode
-from .kandinsky22prior import load_prior_kandinsky22, encode_image, encode_text
+from .logic.kandinsky22decoder import load_decoder_kandinsky22, prepare_latents, movq_decode, unet_decode
+from .logic.kandinsky22prior import load_prior_kandinsky22, encode_image, encode_text
 
 MANIFEST = {
     "name": "Kandinsky 2.2 Nodes",
