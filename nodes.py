@@ -1,10 +1,8 @@
 import folder_paths
-import comfy
 from pathlib import Path
 from typing import List
 
 import torch
-from diffusers import Kandinsky3Pipeline
 
 from .kandinsky22decoder import load_decoder_kandinsky22, prepare_latents, movq_decode, unet_decode
 from .kandinsky22prior import load_prior_kandinsky22, encode_image, encode_text
