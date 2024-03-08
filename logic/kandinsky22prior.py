@@ -1,6 +1,5 @@
 from typing import List, Optional, Callable, Dict
 
-import PIL.Image
 import torch
 
 from diffusers import KandinskyV22PriorPipeline
@@ -289,8 +288,3 @@ def load_prior_kandinsky22(path: Path):
     return \
         (image_processor, image_encoder), \
         (tokenizer, text_encoder, prior, scheduler, zero_embeds)
-
-'''
-Need to somehow concat conds 
-Latents better be initialized via seed (need for embed dim)
-'''
