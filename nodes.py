@@ -5,7 +5,7 @@ from typing import List
 import torch
 
 from .logic.kandinsky22decoder import load_decoder_kandinsky22, prepare_latents, movq_decode, unet_decode, \
-    prepare_latents_on_img, unet_img2img_decode
+    prepare_latents_on_img, unet_img2img_decode, unet_hint_decode
 from .logic.kandinsky22prior import load_prior_kandinsky22, encode_image, encode_text
 
 MANIFEST = {
@@ -145,6 +145,35 @@ class Kandinsky22UnetDecoder:
         ),
 
 
+class Kandinsky22HintUnetDecoder:
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "decoder": ("DECODER", ),
+                "hint": ("IMAGE", ),
+                "latents": ("LATENT",),
+                "image_embeds": ("PRIOR_LATENT", ),
+                "negative_image_embeds": ("PRIOR_LATENT", ),
+                "num_inference_steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
+                "guidance_scale": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+            }
+        }
+
+    RETURN_TYPES = ("LATENT", )
+
+    FUNCTION = "decode"
+    CATEGORY = "decoder"
+
+    def decode(self, decoder, image_embeds, negative_image_embeds, latents, num_inference_steps, guidance_scale, seed, hint):
+        return unet_hint_decode(
+            decoder, image_embeds, negative_image_embeds, latents,
+            seed, hint, num_inference_steps, guidance_scale
+        ),
+
+
 class Kandinsky22ImgUnetDecoder:
 
     @classmethod
@@ -172,6 +201,7 @@ class Kandinsky22ImgUnetDecoder:
             decoder, image_embeds, negative_image_embeds, latents,
             seed, num_inference_steps, guidance_scale, strength
         ),
+
 
 class Kandinsky22MovqDecoder:
 
@@ -342,6 +372,7 @@ NODE_CLASS_MAPPINGS = {
     "comfy-kandinsky22-img-latents": Kandinsky22ImgLatents,
     "comfy-kandinsky22-movq-decoder": Kandinsky22MovqDecoder,
     "comfy-kandinsky22-unet-decoder": Kandinsky22UnetDecoder,
+    "comfy-kandinsky22-hint-unet-decoder": Kandinsky22HintUnetDecoder,
     "comfy-kandinsky22-img-unet-decoder": Kandinsky22ImgUnetDecoder,
     "comfy-kandinsky22-prior-averaging-2": Kandinsky22PriorAveraging2,
     "comfy-kandinsky22-prior-averaging-3": Kandinsky22PriorAveraging3,
@@ -357,6 +388,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "comfy-kandinsky22-img-latents": "Kandinsky2.2 Image Latents",
     "comfy-kandinsky22-movq-decoder": "Kandinsky2.2 MovQ Decoder",
     "comfy-kandinsky22-unet-decoder": "Kandinsky2.2 Unet Decoder",
+    "comfy-kandinsky22-hint-unet-decoder": "Kandinsky2.2 Hint Unet Decoder",
     "comfy-kandinsky22-img-unet-decoder": "Kandinsky2.2 Img2Img Unet Decoder",
     "comfy-kandinsky22-prior-averaging-2": "Kandinsky2.2 Prior 2-Averaging",
     "comfy-kandinsky22-prior-averaging-3": "Kandinsky2.2 Prior 3-Averaging",
