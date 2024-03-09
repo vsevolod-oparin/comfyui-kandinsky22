@@ -4,7 +4,8 @@ from typing import List
 
 import torch
 
-from .logic.kandinsky22decoder import load_decoder_kandinsky22, prepare_latents, movq_decode, unet_decode
+from .logic.kandinsky22decoder import load_decoder_kandinsky22, prepare_latents, movq_decode, unet_decode, \
+    prepare_latents_on_img, unet_img2img_decode
 from .logic.kandinsky22prior import load_prior_kandinsky22, encode_image, encode_text
 
 MANIFEST = {
@@ -89,6 +90,33 @@ class Kandinsky22Latents:
         return prepare_latents(shape, lat_info, seed),
 
 
+class Kandinsky22ImgLatents:
+    MAX_RESOLUTION = 8192
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "lat_info": ("LATENT_INFO", ),
+                "image": ("IMAGE", ),
+                "movq": ("MOVQ", ),
+                "batch_size": ("INT", {"default": 1, "min": 1, "max": 16}),
+                "height": ("INT", {"default": 512, "min": 64, "max": Kandinsky22ImgLatents.MAX_RESOLUTION, "step": 8}),
+                "width": ("INT", {"default": 512, "min": 64, "max": Kandinsky22ImgLatents.MAX_RESOLUTION, "step": 8}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+            }
+        }
+
+    RETURN_TYPES = ("IMG_LATENT", )
+
+    FUNCTION = "prepare_latents"
+    CATEGORY = "latents"
+
+    def prepare_latents(self, image, movq, lat_info, batch_size, height, width, seed):
+        shape = batch_size, height, width
+        return prepare_latents_on_img(image, movq, shape, lat_info, seed),
+
+
 class Kandinsky22UnetDecoder:
 
     @classmethod
@@ -116,6 +144,34 @@ class Kandinsky22UnetDecoder:
             seed, num_inference_steps, guidance_scale
         ),
 
+
+class Kandinsky22ImgUnetDecoder:
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "decoder": ("DECODER", ),
+                "latents": ("IMG_LATENT",),
+                "strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001, "round": 0.0001}),
+                "image_embeds": ("PRIOR_LATENT", ),
+                "negative_image_embeds": ("PRIOR_LATENT", ),
+                "num_inference_steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
+                "guidance_scale": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+            }
+        }
+
+    RETURN_TYPES = ("LATENT", )
+
+    FUNCTION = "decode"
+    CATEGORY = "decoder"
+
+    def decode(self, decoder, image_embeds, negative_image_embeds, latents, num_inference_steps, guidance_scale, seed, strength):
+        return unet_img2img_decode(
+            decoder, image_embeds, negative_image_embeds, latents,
+            seed, num_inference_steps, guidance_scale, strength
+        ),
 
 class Kandinsky22MovqDecoder:
 
@@ -283,8 +339,10 @@ NODE_CLASS_MAPPINGS = {
     "comfy-kandinsky22-image-encoder": Kandinsky22ImageEncoder,
     "comfy-kandinsky22-text-encoder": Kandinsky22TextEncoder,
     "comfy-kandinsky22-latents": Kandinsky22Latents,
+    "comfy-kandinsky22-img-latents": Kandinsky22ImgLatents,
     "comfy-kandinsky22-movq-decoder": Kandinsky22MovqDecoder,
     "comfy-kandinsky22-unet-decoder": Kandinsky22UnetDecoder,
+    "comfy-kandinsky22-img-unet-decoder": Kandinsky22ImgUnetDecoder,
     "comfy-kandinsky22-prior-averaging-2": Kandinsky22PriorAveraging2,
     "comfy-kandinsky22-prior-averaging-3": Kandinsky22PriorAveraging3,
     "comfy-kandinsky22-prior-averaging-4": Kandinsky22PriorAveraging4,
@@ -296,8 +354,10 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "comfy-kandinsky22-image-encoder": "Kandinsky2.2 Image Encoder",
     "comfy-kandinsky22-text-encoder": "Kandinsky2.2 Text Encoder",
     "comfy-kandinsky22-latents": "Kandinsky2.2 Latents",
+    "comfy-kandinsky22-img-latents": "Kandinsky2.2 Image Latents",
     "comfy-kandinsky22-movq-decoder": "Kandinsky2.2 MovQ Decoder",
     "comfy-kandinsky22-unet-decoder": "Kandinsky2.2 Unet Decoder",
+    "comfy-kandinsky22-img-unet-decoder": "Kandinsky2.2 Img2Img Unet Decoder",
     "comfy-kandinsky22-prior-averaging-2": "Kandinsky2.2 Prior 2-Averaging",
     "comfy-kandinsky22-prior-averaging-3": "Kandinsky2.2 Prior 3-Averaging",
     "comfy-kandinsky22-prior-averaging-4": "Kandinsky2.2 Prior 4-Averaging",

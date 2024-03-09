@@ -1,8 +1,12 @@
+import dataclasses
 from typing import List, Optional, Callable, Dict, Tuple, Union
 
+import PIL
+import numpy as np
 import torch
+from PIL import Image
 
-from diffusers import KandinskyV22Pipeline
+from diffusers import KandinskyV22Pipeline, DDPMScheduler
 from pathlib import Path
 
 from comfy import model_management
@@ -15,6 +19,65 @@ from diffusers.utils.torch_utils import randn_tensor
 from .utils import get_vanilla_callback
 
 logger = logging.getLogger()
+
+'''
+TOOD: add literals
+
+NEAREST: Literal[0]
+BOX: Literal[4]
+BILINEAR: Literal[2]
+LINEAR: Literal[2]
+HAMMING: Literal[5]
+BICUBIC: Literal[3]
+CUBIC: Literal[3]
+LANCZOS: Literal[1]
+ANTIALIAS: Literal[1]
+'''
+
+
+def prepare_image(image: torch.Tensor, width: int = 512, height: int = 512):
+    pil_image = numpy_to_pil(image.numpy())[0]
+    pil_image = pil_image.resize((width, height), resample=Image.BICUBIC, reducing_gap=1)
+    arr = np.array(pil_image.convert("RGB"))
+    arr = arr.astype(np.float32) / 127.5 - 1
+    arr = np.transpose(arr, [2, 0, 1])
+    image = torch.from_numpy(arr).unsqueeze(0)
+    return image
+
+
+@dataclasses.dataclass
+class ImageLatents:
+    init_latents: torch.Tensor
+    noise_latents: torch.Tensor
+
+
+def prepare_latents_on_img(image, movq, shape, decoder_info, seed):
+    device: torch.device = model_management.get_torch_device()
+    offload_device: torch.device = model_management.intermediate_device()
+    movq.to(device)
+
+    batch_size, height, width = shape
+    movq_scale_factor, num_channels_latents, dtype = decoder_info
+    generator = torch.Generator().manual_seed(seed)
+
+    image = prepare_image(image, width, height)
+    image = image.to(dtype=dtype, device=movq.device)
+
+    latents = movq.encode(image)["latents"].repeat_interleave(batch_size, dim=0)
+    noise = randn_tensor(latents.shape, generator=generator, dtype=dtype, device=latents.device)
+
+    movq.to(offload_device)
+
+    return ImageLatents(
+        init_latents=latents,
+        noise_latents=noise,
+    )
+
+
+def get_timesteps(scheduler, num_inference_steps, strength):
+    t_start = max(int(num_inference_steps * (1.0 - strength)), 0)
+    timesteps = scheduler.timesteps[t_start:]
+    return timesteps, num_inference_steps - t_start
 
 
 def prepare_latents(shape, decoder_info, seed):
@@ -33,11 +96,13 @@ def decode(
         decoder: Tuple,
         image_embeds: Union[torch.FloatTensor, List[torch.FloatTensor]],
         negative_image_embeds: Union[torch.FloatTensor, List[torch.FloatTensor]],
-        latents: torch.FloatTensor,
+        latents: torch.Tensor = None,
         num_inference_steps: int = 100,
         guidance_scale: float = 4.0,
         generator: Optional[torch.Generator] = None,
-        callback_on_step_end: Optional[Callable[[int, int, Dict], None]] = None
+        callback_on_step_end: Optional[Callable[[int, int, Dict], None]] = None,
+        init_latents: torch.Tensor = None,
+        strength: float = 1.0,
     ):
     num_images_per_prompt = latents.shape[0]
     do_classifier_free_guidance = guidance_scale > 1.0
@@ -52,11 +117,22 @@ def decode(
         )
 
     scheduler.set_timesteps(num_inference_steps, device=device)
-    timesteps = scheduler.timesteps
+    if init_latents is None:
+        timesteps = scheduler.timesteps
 
-    # create initial latent
-    latents = latents * scheduler.init_noise_sigma
-    latents = latents.to(device)
+        # create initial latent
+        latents = latents * scheduler.init_noise_sigma
+        latents = latents.to(device)
+    elif strength > 0.0:
+        timesteps, num_inference_steps = get_timesteps(scheduler, num_inference_steps, strength)
+        latent_timestep = timesteps[:1]
+        init_latents.to(device)
+        noise_latents = latents.to(device)
+
+        scheduler: DDPMScheduler
+        latents = scheduler.add_noise(init_latents, noise_latents, latent_timestep)
+    else:
+        return init_latents
 
     for i, t in enumerate(timesteps):
         # expand the latents if we are doing classifier free guidance
@@ -123,7 +199,44 @@ def unet_decode(
         num_inference_steps,
         guidance_scale,
         generator,
-        callback_on_step_end=get_vanilla_callback(num_inference_steps)
+        callback_on_step_end=get_vanilla_callback(num_inference_steps),
+    )
+
+    # TODO: offload effectively
+    unet.to(offload_device)
+
+    return result
+
+
+def unet_img2img_decode(
+        decoder: Tuple,
+        image_embeds: Union[torch.FloatTensor, List[torch.FloatTensor]],
+        negative_image_embeds: Union[torch.FloatTensor, List[torch.FloatTensor]],
+        latents: ImageLatents,
+        seed: int,
+        num_inference_steps: int = 100,
+        guidance_scale: float = 4.0,
+        strength: float = 1.0,
+    ):
+    generator = torch.Generator().manual_seed(seed)
+    device: torch.device = model_management.get_torch_device()
+    offload_device: torch.device = model_management.intermediate_device()
+
+    scheduler, unet = decoder
+    unet.to(device)
+
+    result = decode(
+        device,
+        decoder,
+        image_embeds,
+        negative_image_embeds,
+        latents.noise_latents,
+        num_inference_steps,
+        guidance_scale,
+        generator,
+        callback_on_step_end=get_vanilla_callback(int(num_inference_steps * strength)),
+        init_latents=latents.init_latents,
+        strength=strength,
     )
 
     # TODO: offload effectively
