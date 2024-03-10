@@ -97,9 +97,9 @@ class Kandinsky22ImgLatents:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "lat_info": ("LATENT_INFO", ),
+                "movq": ("MOVQ",),
                 "image": ("IMAGE", ),
-                "movq": ("MOVQ", ),
+                "lat_info": ("LATENT_INFO",),
                 "batch_size": ("INT", {"default": 1, "min": 1, "max": 16}),
                 "height": ("INT", {"default": 512, "min": 64, "max": Kandinsky22ImgLatents.MAX_RESOLUTION, "step": 8}),
                 "width": ("INT", {"default": 512, "min": 64, "max": Kandinsky22ImgLatents.MAX_RESOLUTION, "step": 8}),
