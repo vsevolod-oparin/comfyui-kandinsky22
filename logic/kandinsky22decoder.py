@@ -1,6 +1,7 @@
 import dataclasses
 from typing import List, Optional, Callable, Dict, Tuple, Union
 
+import torchvision.transforms.functional as F
 import PIL
 import numpy as np
 import torch
@@ -47,8 +48,9 @@ def prepare_image(image: torch.Tensor, width: int = 512, height: int = 512):
 
 @dataclasses.dataclass
 class ImageLatents:
-    init_latents: torch.Tensor
-    noise_latents: torch.Tensor
+    init_latents: torch.Tensor = None
+    noise_latents: torch.Tensor = None
+    hint: torch.Tensor = None
 
 
 def prepare_latents_on_img(image, movq, shape, decoder_info, seed):
@@ -89,6 +91,18 @@ def prepare_latents(shape, decoder_info, seed):
     shape = batch_size, num_channels_latents, height, width
 
     return randn_tensor(shape, generator=generator, dtype=dtype)
+
+
+def combine_hint_latents(
+        hint: torch.Tensor,
+        latents: Union[torch.Tensor, ImageLatents]):
+    if isinstance(latents, torch.Tensor):
+        latents = ImageLatents(noise_latents=latents)
+    img_size = latents.noise_latents.shape[-2:]
+    if hint.shape[-2:] != img_size:
+        F.resize(hint, img_size)
+    latents.hint = hint
+    return latents
 
 
 def prepare_added_cond_kwargs(
@@ -199,10 +213,11 @@ def unet_decode(
         decoder: Tuple,
         image_embeds: Union[torch.FloatTensor, List[torch.FloatTensor]],
         negative_image_embeds: Union[torch.FloatTensor, List[torch.FloatTensor]],
-        latents: torch.FloatTensor,
+        latents: Union[torch.FloatTensor, ImageLatents],
         seed: int,
         num_inference_steps: int = 100,
         guidance_scale: float = 4.0,
+        strength: float = 1.0,
     ):
     generator = torch.Generator().manual_seed(seed)
     device: torch.device = model_management.get_torch_device()
@@ -211,16 +226,29 @@ def unet_decode(
     scheduler, unet = decoder
     unet.to(device)
 
+    init_latents = None
+    hint         = None
+
+    if isinstance(latents, ImageLatents):
+        init_latents = latents.init_latents
+        noise_latents = latents.noise_latents
+        hint = latents.hint
+    else:
+        noise_latents = latents
+
     result = decode(
         device,
         decoder,
         image_embeds,
         negative_image_embeds,
-        latents,
+        noise_latents,
         num_inference_steps,
         guidance_scale,
         generator,
         callback_on_step_end=get_vanilla_callback(num_inference_steps),
+        init_latents=init_latents,
+        hint=hint,
+        strength=strength
     )
 
     # TODO: offload effectively

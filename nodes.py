@@ -5,7 +5,7 @@ from typing import List
 import torch
 
 from .logic.kandinsky22decoder import load_decoder_kandinsky22, prepare_latents, movq_decode, unet_decode, \
-    prepare_latents_on_img, unet_img2img_decode, unet_hint_decode
+    prepare_latents_on_img, unet_img2img_decode, unet_hint_decode, combine_hint_latents
 from .logic.kandinsky22prior import load_prior_kandinsky22, encode_image, encode_text
 
 MANIFEST = {
@@ -107,7 +107,7 @@ class Kandinsky22ImgLatents:
             }
         }
 
-    RETURN_TYPES = ("IMG_LATENT", )
+    RETURN_TYPES = ("LATENT", )
 
     FUNCTION = "prepare_latents"
     CATEGORY = "latents"
@@ -115,6 +115,27 @@ class Kandinsky22ImgLatents:
     def prepare_latents(self, image, movq, lat_info, batch_size, height, width, seed):
         shape = batch_size, height, width
         return prepare_latents_on_img(image, movq, shape, lat_info, seed),
+
+
+class Kandinsky22HintCombiner:
+    MAX_RESOLUTION = 8192
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "hint": ("IMAGE",),
+                "latents": ("LATENT",),
+            }
+        }
+
+    RETURN_TYPES = ("LATENT", )
+
+    FUNCTION = "prepare_latents"
+    CATEGORY = "latents"
+
+    def prepare_latents(self, hint, latents):
+        return combine_hint_latents(hint, latents),
 
 
 class Kandinsky22UnetDecoder:
@@ -125,6 +146,7 @@ class Kandinsky22UnetDecoder:
             "required": {
                 "decoder": ("DECODER", ),
                 "latents": ("LATENT",),
+                "strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001, "round": 0.0001}),
                 "image_embeds": ("PRIOR_LATENT", ),
                 "negative_image_embeds": ("PRIOR_LATENT", ),
                 "num_inference_steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
@@ -138,10 +160,10 @@ class Kandinsky22UnetDecoder:
     FUNCTION = "decode"
     CATEGORY = "decoder"
 
-    def decode(self, decoder, image_embeds, negative_image_embeds, latents, num_inference_steps, guidance_scale, seed):
+    def decode(self, decoder, image_embeds, negative_image_embeds, latents, num_inference_steps, guidance_scale, seed, strength):
         return unet_decode(
             decoder, image_embeds, negative_image_embeds, latents,
-            seed, num_inference_steps, guidance_scale
+            seed, num_inference_steps, guidance_scale, strength
         ),
 
 
@@ -181,7 +203,7 @@ class Kandinsky22ImgUnetDecoder:
         return {
             "required": {
                 "decoder": ("DECODER", ),
-                "latents": ("IMG_LATENT",),
+                "latents": ("LATENT",),
                 "strength": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001, "round": 0.0001}),
                 "image_embeds": ("PRIOR_LATENT", ),
                 "negative_image_embeds": ("PRIOR_LATENT", ),
@@ -369,6 +391,7 @@ NODE_CLASS_MAPPINGS = {
     "comfy-kandinsky22-image-encoder": Kandinsky22ImageEncoder,
     "comfy-kandinsky22-text-encoder": Kandinsky22TextEncoder,
     "comfy-kandinsky22-latents": Kandinsky22Latents,
+    "comfy-kandinsky22-hint-combiner": Kandinsky22HintCombiner,
     "comfy-kandinsky22-img-latents": Kandinsky22ImgLatents,
     "comfy-kandinsky22-movq-decoder": Kandinsky22MovqDecoder,
     "comfy-kandinsky22-unet-decoder": Kandinsky22UnetDecoder,
@@ -385,6 +408,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "comfy-kandinsky22-image-encoder": "Kandinsky2.2 Image Encoder",
     "comfy-kandinsky22-text-encoder": "Kandinsky2.2 Text Encoder",
     "comfy-kandinsky22-latents": "Kandinsky2.2 Latents",
+    "comfy-kandinsky22-hint-combiner": "Kandinsky2.2 Hint Combiner",
     "comfy-kandinsky22-img-latents": "Kandinsky2.2 Image Latents",
     "comfy-kandinsky22-movq-decoder": "Kandinsky2.2 MovQ Decoder",
     "comfy-kandinsky22-unet-decoder": "Kandinsky2.2 Unet Decoder",
