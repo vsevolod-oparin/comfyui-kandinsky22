@@ -1,18 +1,17 @@
-from typing import List, Optional, Callable, Dict
-
+import logging
 import torch
 
-from diffusers import KandinskyV22PriorPipeline
 from pathlib import Path
+from typing import List, Optional, Callable, Dict
 
 from comfy import model_management
-import logging
-
+from diffusers import KandinskyV22PriorPipeline
 from diffusers.pipelines.kandinsky import KandinskyPriorPipelineOutput
 from diffusers.utils import numpy_to_pil
 from diffusers.utils.torch_utils import randn_tensor
 
 from .utils import get_vanilla_callback
+
 
 logger = logging.getLogger()
 

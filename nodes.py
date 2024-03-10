@@ -1,12 +1,13 @@
+import torch
 import folder_paths
+
 from pathlib import Path
 from typing import List
-
-import torch
 
 from .logic.kandinsky22decoder import load_decoder_kandinsky22, prepare_latents, movq_decode, unet_decode, \
     prepare_latents_on_img, combine_hint_latents
 from .logic.kandinsky22prior import load_prior_kandinsky22, encode_image, encode_text
+
 
 MANIFEST = {
     "name": "Kandinsky 2.2 Nodes",

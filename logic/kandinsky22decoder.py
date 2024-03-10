@@ -1,25 +1,32 @@
 import dataclasses
-from typing import List, Optional, Callable, Dict, Tuple, Union
-
-import torchvision.transforms.functional as F
-import PIL
+import logging
 import numpy as np
 import torch
-from PIL import Image
+import torchvision.transforms.functional as F
 
-from diffusers import KandinskyV22Pipeline, DDPMScheduler
 from pathlib import Path
+from PIL import Image
+from typing import List, Optional, Callable, Dict, Tuple, Union
 
 from comfy import model_management
-import logging
-
+from diffusers import KandinskyV22Pipeline, DDPMScheduler
 from diffusers.pipelines.kandinsky2_2.pipeline_kandinsky2_2 import downscale_height_and_width
 from diffusers.utils import numpy_to_pil
 from diffusers.utils.torch_utils import randn_tensor
 
 from .utils import get_vanilla_callback
 
+
 logger = logging.getLogger()
+
+
+@dataclasses.dataclass
+class ImageLatents:
+    movq_scale_factor: int
+    init_latents: torch.Tensor = None
+    noise_latents: torch.Tensor = None
+    hint: torch.Tensor = None
+
 
 '''
 TOOD: add literals
@@ -44,14 +51,6 @@ def prepare_image(image: torch.Tensor, width: int = 512, height: int = 512):
     arr = np.transpose(arr, [2, 0, 1])
     image = torch.from_numpy(arr).unsqueeze(0)
     return image
-
-
-@dataclasses.dataclass
-class ImageLatents:
-    movq_scale_factor: int
-    init_latents: torch.Tensor = None
-    noise_latents: torch.Tensor = None
-    hint: torch.Tensor = None
 
 
 def prepare_latents_on_img(image, movq, shape, decoder_info, seed):
