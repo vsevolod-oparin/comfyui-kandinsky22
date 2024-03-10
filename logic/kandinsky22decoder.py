@@ -48,6 +48,7 @@ def prepare_image(image: torch.Tensor, width: int = 512, height: int = 512):
 
 @dataclasses.dataclass
 class ImageLatents:
+    movq_scale_factor: int
     init_latents: torch.Tensor = None
     noise_latents: torch.Tensor = None
     hint: torch.Tensor = None
@@ -73,6 +74,7 @@ def prepare_latents_on_img(image, movq, shape, decoder_info, seed):
     return ImageLatents(
         init_latents=latents,
         noise_latents=noise,
+        movq_scale_factor=movq_scale_factor,
     )
 
 
@@ -90,7 +92,11 @@ def prepare_latents(shape, decoder_info, seed):
     height, width = downscale_height_and_width(height, width, movq_scale_factor)
     shape = batch_size, num_channels_latents, height, width
 
-    return randn_tensor(shape, generator=generator, dtype=dtype)
+    noise = randn_tensor(shape, generator=generator, dtype=dtype)
+    return ImageLatents(
+        noise_latents=noise,
+        movq_scale_factor=movq_scale_factor,
+    )
 
 
 def combine_hint_latents(
@@ -99,8 +105,14 @@ def combine_hint_latents(
     if isinstance(latents, torch.Tensor):
         latents = ImageLatents(noise_latents=latents)
     img_size = latents.noise_latents.shape[-2:]
+    img_size = np.array(img_size, dtype=np.uint32) * latents.movq_scale_factor
+    img_size = list(img_size)
+
     if hint.shape[-2:] != img_size:
-        F.resize(hint, img_size)
+        hint = hint.permute((0, 3, 1, 2))
+        hint = F.resize(hint, img_size)
+        hint = hint.permute((0, 2, 3, 1))
+
     latents.hint = hint
     return latents
 
@@ -249,115 +261,6 @@ def unet_decode(
         init_latents=init_latents,
         hint=hint,
         strength=strength
-    )
-
-    # TODO: offload effectively
-    unet.to(offload_device)
-
-    return result
-
-
-def unet_hint_decode(
-        decoder: Tuple,
-        image_embeds: Union[torch.FloatTensor, List[torch.FloatTensor]],
-        negative_image_embeds: Union[torch.FloatTensor, List[torch.FloatTensor]],
-        latents: torch.FloatTensor,
-        seed: int,
-        hint: torch.Tensor,
-        num_inference_steps: int = 100,
-        guidance_scale: float = 4.0):
-    generator = torch.Generator().manual_seed(seed)
-    device: torch.device = model_management.get_torch_device()
-    offload_device: torch.device = model_management.intermediate_device()
-
-    scheduler, unet = decoder
-    unet.to(device)
-
-    result = decode(
-        device,
-        decoder,
-        image_embeds,
-        negative_image_embeds,
-        latents,
-        num_inference_steps,
-        guidance_scale,
-        generator,
-        callback_on_step_end=get_vanilla_callback(num_inference_steps),
-        hint=hint,
-    )
-
-    # TODO: offload effectively
-    unet.to(offload_device)
-
-    return result
-
-def unet_img2img_decode(
-        decoder: Tuple,
-        image_embeds: Union[torch.FloatTensor, List[torch.FloatTensor]],
-        negative_image_embeds: Union[torch.FloatTensor, List[torch.FloatTensor]],
-        latents: ImageLatents,
-        seed: int,
-        num_inference_steps: int = 100,
-        guidance_scale: float = 4.0,
-        strength: float = 1.0,
-    ):
-    generator = torch.Generator().manual_seed(seed)
-    device: torch.device = model_management.get_torch_device()
-    offload_device: torch.device = model_management.intermediate_device()
-
-    scheduler, unet = decoder
-    unet.to(device)
-
-    result = decode(
-        device,
-        decoder,
-        image_embeds,
-        negative_image_embeds,
-        latents.noise_latents,
-        num_inference_steps,
-        guidance_scale,
-        generator,
-        callback_on_step_end=get_vanilla_callback(int(num_inference_steps * strength)),
-        init_latents=latents.init_latents,
-        strength=strength,
-    )
-
-    # TODO: offload effectively
-    unet.to(offload_device)
-
-    return result
-
-
-def unet_hint_img2img_decode(
-        decoder: Tuple,
-        image_embeds: Union[torch.FloatTensor, List[torch.FloatTensor]],
-        negative_image_embeds: Union[torch.FloatTensor, List[torch.FloatTensor]],
-        latents: ImageLatents,
-        seed: int,
-        hint: torch.Tensor,
-        num_inference_steps: int = 100,
-        guidance_scale: float = 4.0,
-        strength: float = 1.0):
-    generator = torch.Generator().manual_seed(seed)
-    device: torch.device = model_management.get_torch_device()
-    offload_device: torch.device = model_management.intermediate_device()
-
-    scheduler, unet = decoder
-    unet.to(device)
-
-    result = decode(
-        device,
-        decoder,
-        image_embeds,
-        negative_image_embeds,
-        latents.noise_latents,
-        num_inference_steps,
-        guidance_scale,
-        generator,
-        callback_on_step_end=get_vanilla_callback(num_inference_steps),
-        hint=hint,
-        init_latents=latents.init_latents,
-        strength=strength,
     )
 
     # TODO: offload effectively
