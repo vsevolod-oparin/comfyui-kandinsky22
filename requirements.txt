@@ -1,1 +1,3 @@
-git+https://github.com/ai-forever/Kandinsky-2
+accelerate==0.27.2
+diffusers @ git+https://github.com/huggingface/diffusers@31de879fb4530ad203dbdaef993404c924daf35d
+torch>=2.2.0
