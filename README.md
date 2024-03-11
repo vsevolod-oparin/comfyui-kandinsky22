@@ -62,7 +62,8 @@ git clone --depth 1 https://huggingface.co/kandinsky-community/kandinsky-2-2-pri
 ```
 
 **Note 1**: Git won't show much of the progress. You'll need to wait till the model will be downloaded.
-**Note 2**: `--depth` argument can be skipped, but you're risking to download a lot of unnecessary data.
+
+**Note 2**: Argument `--depth` can be skipped, but you're risking to download a lot of unnecessary data.
 
 
 ## Acknowledgments
