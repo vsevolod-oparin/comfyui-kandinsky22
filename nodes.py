@@ -75,8 +75,8 @@ class Kandinsky22Latents:
             "required": {
                 "lat_info": ("LATENT_INFO", ),
                 "batch_size": ("INT", {"default": 1, "min": 1, "max": 16}),
-                "height": ("INT", {"default": 512, "min": 64, "max": Kandinsky22Latents.MAX_RESOLUTION, "step": 8}),
-                "width": ("INT", {"default": 512, "min": 64, "max": Kandinsky22Latents.MAX_RESOLUTION, "step": 8}),
+                "height": ("INT", {"default": 512, "min": 64, "max": Kandinsky22Latents.MAX_RESOLUTION, "step": 64}),
+                "width": ("INT", {"default": 512, "min": 64, "max": Kandinsky22Latents.MAX_RESOLUTION, "step": 64}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
             }
         }
@@ -102,8 +102,8 @@ class Kandinsky22ImgLatents:
                 "image": ("IMAGE", ),
                 "lat_info": ("LATENT_INFO",),
                 "batch_size": ("INT", {"default": 1, "min": 1, "max": 16}),
-                "height": ("INT", {"default": 512, "min": 64, "max": Kandinsky22ImgLatents.MAX_RESOLUTION, "step": 8}),
-                "width": ("INT", {"default": 512, "min": 64, "max": Kandinsky22ImgLatents.MAX_RESOLUTION, "step": 8}),
+                "height": ("INT", {"default": 512, "min": 64, "max": Kandinsky22ImgLatents.MAX_RESOLUTION, "step": 64}),
+                "width": ("INT", {"default": 512, "min": 64, "max": Kandinsky22ImgLatents.MAX_RESOLUTION, "step": 64}),
                 "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
             }
         }
