@@ -328,11 +328,39 @@ class Kandinsky22TextEncoder:
         )
 
 
+class Kandinsky22PositiveTextEncoder:
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "text_encoder": ("TEXT_ENCODER",),
+                "num_inference_steps": ("INT", {"default": 20, "min": 1, "max": 10000}),
+                "guidance_scale": ("FLOAT", {"default": 8.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
+                "seed": ("INT", {"default": 0, "min": 0, "max": 0xffffffffffffffff}),
+                "prompt": ("STRING", {"multiline": True}),
+            }
+        }
+
+    RETURN_TYPES = ("PRIOR_LATENT",)
+    RETURN_NAMES = ("image_embeds",)
+
+    FUNCTION = "text_encode"
+    CATEGORY = "conditioning"
+
+    def text_encode(self, text_encoder, num_inference_steps, guidance_scale, seed, prompt):
+        return encode_text(
+            text_encoder, num_inference_steps, guidance_scale, seed, prompt, ""
+        )[0],
+
+
+
 NODE_CLASS_MAPPINGS = {
     "comfy-kandinsky22-prior-loader": Kandinsky22PriorLoader,
     "comfy-kandinsky22-decoder-loader": Kandinsky22DecoderLoader,
     "comfy-kandinsky22-image-encoder": Kandinsky22ImageEncoder,
     "comfy-kandinsky22-text-encoder": Kandinsky22TextEncoder,
+    "comfy-kandinsky22-positive-text-encoder": Kandinsky22PositiveTextEncoder,
     "comfy-kandinsky22-latents": Kandinsky22Latents,
     "comfy-kandinsky22-hint-combiner": Kandinsky22HintCombiner,
     "comfy-kandinsky22-img-latents": Kandinsky22ImgLatents,
@@ -348,6 +376,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "comfy-kandinsky22-decoder-loader": "Kandinsky2.2 Decoder Loader",
     "comfy-kandinsky22-image-encoder": "Kandinsky2.2 Image Encoder",
     "comfy-kandinsky22-text-encoder": "Kandinsky2.2 Text Encoder",
+    "comfy-kandinsky22-positive-text-encoder": "Kandinsky2.2 Positive Text Encoder",
     "comfy-kandinsky22-latents": "Kandinsky2.2 Latents",
     "comfy-kandinsky22-hint-combiner": "Kandinsky2.2 Hint Combiner",
     "comfy-kandinsky22-img-latents": "Kandinsky2.2 Image Latents",

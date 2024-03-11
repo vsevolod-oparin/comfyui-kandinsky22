@@ -1,0 +1,833 @@
+{
+  "last_node_id": 82,
+  "last_link_id": 149,
+  "nodes": [
+    {
+      "id": 30,
+      "type": "PreviewImage",
+      "pos": [
+        1970,
+        180
+      ],
+      "size": {
+        "0": 441.2985534667969,
+        "1": 468.98541259765625
+      },
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 37
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 27,
+      "type": "comfy-kandinsky22-prior-loader",
+      "pos": [
+        -180,
+        690
+      ],
+      "size": {
+        "0": 479,
+        "1": 80
+      },
+      "flags": {
+        "collapsed": false
+      },
+      "order": 0,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE_ENCODER",
+          "type": "IMAGE_ENCODER",
+          "links": [
+            131
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "TEXT_ENCODER",
+          "type": "TEXT_ENCODER",
+          "links": [
+            129,
+            130
+          ],
+          "shape": 3,
+          "slot_index": 1
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "comfy-kandinsky22-prior-loader"
+      },
+      "widgets_values": [
+        "/home/smileijp/projects/ComfyUI/models/checkpoints/kandinsky-2-2-prior"
+      ]
+    },
+    {
+      "id": 73,
+      "type": "comfy-kandinsky22-image-encoder",
+      "pos": [
+        420,
+        470
+      ],
+      "size": {
+        "0": 254.40000915527344,
+        "1": 46
+      },
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "encoder",
+          "type": "IMAGE_ENCODER",
+          "link": 131
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 132
+        }
+      ],
+      "outputs": [
+        {
+          "name": "PRIOR_LATENT",
+          "type": "PRIOR_LATENT",
+          "links": [
+            133
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "comfy-kandinsky22-image-encoder"
+      }
+    },
+    {
+      "id": 33,
+      "type": "comfy-kandinsky22-movq-decoder",
+      "pos": [
+        1710,
+        10
+      ],
+      "size": {
+        "0": 210,
+        "1": 46
+      },
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "movq",
+          "type": "MOVQ",
+          "link": 35
+        },
+        {
+          "name": "latents",
+          "type": "LATENT",
+          "link": 102
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            37
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "comfy-kandinsky22-movq-decoder"
+      }
+    },
+    {
+      "id": 75,
+      "type": "LoadImage",
+      "pos": [
+        380,
+        -392
+      ],
+      "size": {
+        "0": 210,
+        "1": 314
+      },
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            140
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "cat (2).png",
+        "image"
+      ]
+    },
+    {
+      "id": 79,
+      "type": "comfy-kandinsky22-hint-combiner",
+      "pos": [
+        1067,
+        143
+      ],
+      "size": {
+        "0": 218.39999389648438,
+        "1": 46
+      },
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "hint",
+          "type": "IMAGE",
+          "link": 144
+        },
+        {
+          "name": "latents",
+          "type": "LATENT",
+          "link": 143
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            146
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "comfy-kandinsky22-hint-combiner"
+      }
+    },
+    {
+      "id": 77,
+      "type": "MarigoldDepthEstimation",
+      "pos": [
+        652,
+        -391
+      ],
+      "size": {
+        "0": 315,
+        "1": 370
+      },
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 140
+        }
+      ],
+      "outputs": [
+        {
+          "name": "ensembled_image",
+          "type": "IMAGE",
+          "links": [
+            144,
+            148
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MarigoldDepthEstimation"
+      },
+      "widgets_values": [
+        807722147756123,
+        "fixed",
+        10,
+        10,
+        0.02,
+        "median",
+        5,
+        0.001,
+        true,
+        true,
+        2,
+        true,
+        "DDIMScheduler",
+        true
+      ]
+    },
+    {
+      "id": 81,
+      "type": "ColorizeDepthmap",
+      "pos": [
+        1215,
+        -389
+      ],
+      "size": {
+        "0": 315,
+        "1": 58
+      },
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 148
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            149
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ColorizeDepthmap"
+      },
+      "widgets_values": [
+        "Spectral"
+      ]
+    },
+    {
+      "id": 82,
+      "type": "PreviewImage",
+      "pos": [
+        1645,
+        -387
+      ],
+      "size": {
+        "0": 210,
+        "1": 246
+      },
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 149
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 32,
+      "type": "comfy-kandinsky22-decoder-loader",
+      "pos": [
+        54,
+        9
+      ],
+      "size": {
+        "0": 492.7126770019531,
+        "1": 98
+      },
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "MOVQ",
+          "type": "MOVQ",
+          "links": [
+            35
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "DECODER",
+          "type": "DECODER",
+          "links": [
+            103
+          ],
+          "shape": 3,
+          "slot_index": 1
+        },
+        {
+          "name": "LATENT_INFO",
+          "type": "LATENT_INFO",
+          "links": [
+            141
+          ],
+          "shape": 3,
+          "slot_index": 2
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "comfy-kandinsky22-decoder-loader"
+      },
+      "widgets_values": [
+        "/home/smileijp/projects/ComfyUI/models/checkpoints/kandinsky-2-2-controlnet-depth"
+      ]
+    },
+    {
+      "id": 69,
+      "type": "comfy-kandinsky22-positive-text-encoder",
+      "pos": [
+        380,
+        820
+      ],
+      "size": {
+        "0": 451.22918701171875,
+        "1": 172
+      },
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text_encoder",
+          "type": "TEXT_ENCODER",
+          "link": 130
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image_embeds",
+          "type": "PRIOR_LATENT",
+          "links": [
+            127
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "comfy-kandinsky22-positive-text-encoder"
+      },
+      "widgets_values": [
+        20,
+        8,
+        421173665860987,
+        "fixed",
+        "low quality, bad quality"
+      ]
+    },
+    {
+      "id": 70,
+      "type": "comfy-kandinsky22-positive-text-encoder",
+      "pos": [
+        380,
+        600
+      ],
+      "size": {
+        "0": 409.99542236328125,
+        "1": 172
+      },
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text_encoder",
+          "type": "TEXT_ENCODER",
+          "link": 129
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image_embeds",
+          "type": "PRIOR_LATENT",
+          "links": [
+            134
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "comfy-kandinsky22-positive-text-encoder"
+      },
+      "widgets_values": [
+        20,
+        8,
+        1108892577631158,
+        "fixed",
+        "portrait of a cat, art, game character"
+      ]
+    },
+    {
+      "id": 72,
+      "type": "LoadImage",
+      "pos": [
+        -30,
+        330
+      ],
+      "size": {
+        "0": 307.82794189453125,
+        "1": 314
+      },
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            132
+          ],
+          "shape": 3,
+          "slot_index": 0
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null,
+          "shape": 3
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "kot.png",
+        "image"
+      ]
+    },
+    {
+      "id": 74,
+      "type": "comfy-kandinsky22-prior-averaging-2",
+      "pos": [
+        902,
+        470
+      ],
+      "size": {
+        "0": 315,
+        "1": 102
+      },
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "in1",
+          "type": "PRIOR_LATENT",
+          "link": 133
+        },
+        {
+          "name": "in2",
+          "type": "PRIOR_LATENT",
+          "link": 134
+        }
+      ],
+      "outputs": [
+        {
+          "name": "PRIOR_LATENT",
+          "type": "PRIOR_LATENT",
+          "links": [
+            135
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "comfy-kandinsky22-prior-averaging-2"
+      },
+      "widgets_values": [
+        0.5,
+        0.5
+      ]
+    },
+    {
+      "id": 63,
+      "type": "comfy-kandinsky22-unet-decoder",
+      "pos": [
+        1330,
+        210
+      ],
+      "size": {
+        "0": 355.20001220703125,
+        "1": 214
+      },
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "decoder",
+          "type": "DECODER",
+          "link": 103
+        },
+        {
+          "name": "latents",
+          "type": "LATENT",
+          "link": 146
+        },
+        {
+          "name": "image_embeds",
+          "type": "PRIOR_LATENT",
+          "link": 135
+        },
+        {
+          "name": "negative_image_embeds",
+          "type": "PRIOR_LATENT",
+          "link": 127
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            102
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "comfy-kandinsky22-unet-decoder"
+      },
+      "widgets_values": [
+        1,
+        10,
+        3,
+        755144156801170,
+        "fixed"
+      ]
+    },
+    {
+      "id": 78,
+      "type": "comfy-kandinsky22-latents",
+      "pos": [
+        584,
+        229
+      ],
+      "size": {
+        "0": 315,
+        "1": 154
+      },
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "lat_info",
+          "type": "LATENT_INFO",
+          "link": 141
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            143
+          ],
+          "shape": 3,
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "comfy-kandinsky22-latents"
+      },
+      "widgets_values": [
+        1,
+        768,
+        768,
+        694802807957942,
+        "fixed"
+      ]
+    }
+  ],
+  "links": [
+    [
+      35,
+      32,
+      0,
+      33,
+      0,
+      "MOVQ"
+    ],
+    [
+      37,
+      33,
+      0,
+      30,
+      0,
+      "IMAGE"
+    ],
+    [
+      102,
+      63,
+      0,
+      33,
+      1,
+      "LATENT"
+    ],
+    [
+      103,
+      32,
+      1,
+      63,
+      0,
+      "DECODER"
+    ],
+    [
+      127,
+      69,
+      0,
+      63,
+      3,
+      "PRIOR_LATENT"
+    ],
+    [
+      129,
+      27,
+      1,
+      70,
+      0,
+      "TEXT_ENCODER"
+    ],
+    [
+      130,
+      27,
+      1,
+      69,
+      0,
+      "TEXT_ENCODER"
+    ],
+    [
+      131,
+      27,
+      0,
+      73,
+      0,
+      "IMAGE_ENCODER"
+    ],
+    [
+      132,
+      72,
+      0,
+      73,
+      1,
+      "IMAGE"
+    ],
+    [
+      133,
+      73,
+      0,
+      74,
+      0,
+      "PRIOR_LATENT"
+    ],
+    [
+      134,
+      70,
+      0,
+      74,
+      1,
+      "PRIOR_LATENT"
+    ],
+    [
+      135,
+      74,
+      0,
+      63,
+      2,
+      "PRIOR_LATENT"
+    ],
+    [
+      140,
+      75,
+      0,
+      77,
+      0,
+      "IMAGE"
+    ],
+    [
+      141,
+      32,
+      2,
+      78,
+      0,
+      "LATENT_INFO"
+    ],
+    [
+      143,
+      78,
+      0,
+      79,
+      1,
+      "LATENT"
+    ],
+    [
+      144,
+      77,
+      0,
+      79,
+      0,
+      "IMAGE"
+    ],
+    [
+      146,
+      79,
+      0,
+      63,
+      1,
+      "LATENT"
+    ],
+    [
+      148,
+      77,
+      0,
+      81,
+      0,
+      "IMAGE"
+    ],
+    [
+      149,
+      81,
+      0,
+      82,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {},
+  "version": 0.4
+}
