@@ -105,7 +105,7 @@ def combine_hint_latents(
         latents = ImageLatents(noise_latents=latents)
     img_size = latents.noise_latents.shape[-2:]
     img_size = np.array(img_size, dtype=np.uint32) * latents.movq_scale_factor
-    img_size = list(img_size)
+    img_size = img_size.tolist()
 
     if hint.shape[-2:] != img_size:
         hint = hint.permute((0, 3, 1, 2))
