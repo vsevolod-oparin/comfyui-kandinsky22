@@ -1,4 +1,4 @@
-# Kandinsky 2.2 ComfUI Plugin
+# Kandinsky 2.2 ComfyUI Plugin
 
 ![](pics/workflow-simple.png)
 
@@ -29,7 +29,9 @@ All weights can be found in Kandinsky Community on 🤗 HF for [Kandinsky 2.2 Co
 
 ![](pics/workflow-img2img.png)
 
-- A depth based workflow ([source](workflows/workflow-depth.json))
+- A depth based workflow ([source](workflows/workflow-depth.json)) 
+
+**Note: Don't forget to switch to kandinsky-2-2-controlnet-depth in decoder node.**
 
 ![](pics/workflow-depth.png)
 
@@ -57,8 +59,9 @@ git clone --depth 1 <HF repository>
 ```
 E.g. to download default pipeline run the following
 ```
-git clone --depth 1 https://huggingface.co/kandinsky-community/kandinsky-2-2-decoder
 git clone --depth 1 https://huggingface.co/kandinsky-community/kandinsky-2-2-prior
+git clone --depth 1 https://huggingface.co/kandinsky-community/kandinsky-2-2-decoder
+git clone --depth 1 https://huggingface.co/kandinsky-community/kandinsky-2-2-controlnet-depth
 ```
 
 **Note 1**: Git won't show much of the progress. You'll need to wait till the model will be downloaded.
